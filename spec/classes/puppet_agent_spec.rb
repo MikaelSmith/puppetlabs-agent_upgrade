@@ -30,7 +30,7 @@ describe 'puppet_agent' do
         end
 
         if Puppet.version < "3.8.0"
-          it { expect { is_expected.to contain_package('puppet_agent') }.to raise_error(Puppet::Error, /upgrading requires Puppet 3.8/) }
+          it { expect { is_expected.to contain_package('puppet_agent') }.to raise_error(Puppet::Error, /upgrading requires at least Puppet 3.8/) }
         else
           [{}, {:service_names => []}].each do |params|
             context "puppet_agent class without any parameters" do
