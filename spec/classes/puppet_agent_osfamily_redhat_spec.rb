@@ -43,6 +43,8 @@ describe 'puppet_agent', :unless => Puppet.version < "3.8.0" do
             'gpgcheck' => '1',
             'gpgkey' => 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-puppetlabs',
         }) }
+
+        it { is_expected.to contain_class("puppet_agent::osfamily::redhat") }
       end
 
       context 'when PE' do
@@ -76,6 +78,8 @@ describe 'puppet_agent', :unless => Puppet.version < "3.8.0" do
           'sslclientcert' => '/etc/puppetlabs/puppet/ssl/certs/foo.example.vm.pem',
           'sslclientkey' => '/etc/puppetlabs/puppet/ssl/private_keys/foo.example.vm.pem',
         }) }
+
+        it { is_expected.to contain_class("puppet_agent::osfamily::redhat") }
       end
     end
   end
