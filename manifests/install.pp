@@ -16,65 +16,67 @@ class puppet_agent::install(
 ) {
   assert_private()
 
-  if ($::operatingsystem == 'SLES' and $::operatingsystemmajrelease == '10') or ($::operatingsystem == 'AIX' and  $::architecture =~ /PowerPC_POWER[5,6,7]/) {
-    contain puppet_agent::install::remove_packages
+  if ($::aio_agent_version != $package_version) {
+    if ($::operatingsystem == 'SLES' and $::operatingsystemmajrelease == '10') or ($::operatingsystem == 'AIX' and  $::architecture =~ /PowerPC_POWER[5,6,7]/) {
+      contain puppet_agent::install::remove_packages
 
-    exec { 'replace puppet.conf removed by package removal':
-      path      => '/bin:/usr/bin:/sbin:/usr/sbin',
-      command   => "cp ${puppet_agent::params::confdir}/puppet.conf.rpmsave ${puppet_agent::params::config}",
-      creates   => $puppet_agent::params::config,
-      require   => Class['puppet_agent::install::remove_packages'],
-      before    => Package[$puppet_agent::package_name],
-      logoutput => 'on_failure',
-    }
+      exec { 'replace puppet.conf removed by package removal':
+        path      => '/bin:/usr/bin:/sbin:/usr/sbin',
+        command   => "cp ${puppet_agent::params::confdir}/puppet.conf.rpmsave ${puppet_agent::params::config}",
+        creates   => $puppet_agent::params::config,
+        require   => Class['puppet_agent::install::remove_packages'],
+        before    => Package[$puppet_agent::package_name],
+        logoutput => 'on_failure',
+      }
 
-    $_package_options = {
-      provider        => 'rpm',
-      source          => "/opt/puppetlabs/packages/${package_file_name}",
-    }
-  } elsif $::operatingsystem == 'Solaris' and $::operatingsystemmajrelease == '10' {
-    contain puppet_agent::install::remove_packages
+      $_package_options = {
+        provider        => 'rpm',
+        source          => "/opt/puppetlabs/packages/${package_file_name}",
+      }
+    } elsif $::operatingsystem == 'Solaris' and $::operatingsystemmajrelease == '10' {
+      contain puppet_agent::install::remove_packages
 
-    $_unzipped_package_name = regsubst($package_file_name, '\.gz$', '')
-    $_package_options = {
-      adminfile => '/opt/puppetlabs/packages/solaris-noask',
-      source    => "/opt/puppetlabs/packages/${_unzipped_package_name}",
-      require   => Class['puppet_agent::install::remove_packages'],
-    }
-  } elsif $::operatingsystem == 'Darwin' and $::macosx_productversion_major =~ /10\.[9,10,11]/ {
-    contain puppet_agent::install::remove_packages
+      $_unzipped_package_name = regsubst($package_file_name, '\.gz$', '')
+      $_package_options = {
+        adminfile => '/opt/puppetlabs/packages/solaris-noask',
+        source    => "/opt/puppetlabs/packages/${_unzipped_package_name}",
+        require   => Class['puppet_agent::install::remove_packages'],
+      }
+    } elsif $::operatingsystem == 'Darwin' and $::macosx_productversion_major =~ /10\.[9,10,11]/ {
+      contain puppet_agent::install::remove_packages
 
-    $_package_options = {
-      source    => "/opt/puppetlabs/packages/${package_file_name}",
-      require   => Class['puppet_agent::install::remove_packages'],
-    }
-  } else {
-    $_package_options = {}
-  }
-
-  if $::osfamily == 'windows' {
-    if $::puppet_agent::is_pe == true and empty($::puppet_agent::source) {
-      class { 'puppet_agent::windows::install':
-        package_file_name => $package_file_name,
-        source            => windows_native_path("${::puppet_agent::params::local_packages_dir}/${package_file_name}"),
+      $_package_options = {
+        source    => "/opt/puppetlabs/packages/${package_file_name}",
+        require   => Class['puppet_agent::install::remove_packages'],
       }
     } else {
-      class { 'puppet_agent::windows::install':
-        package_file_name => $package_file_name,
-        source            => $::puppet_agent::source,
+      $_package_options = {}
+    }
+
+    if $::osfamily == 'windows' {
+      if $::puppet_agent::is_pe == true and empty($::puppet_agent::source) {
+        class { 'puppet_agent::windows::install':
+          package_file_name => $package_file_name,
+          source            => windows_native_path("${::puppet_agent::params::local_packages_dir}/${package_file_name}"),
+        }
+      } else {
+        class { 'puppet_agent::windows::install':
+          package_file_name => $package_file_name,
+          source            => $::puppet_agent::source,
+        }
       }
-    }
-  } elsif ($::osfamily == 'Solaris' and $::operatingsystemmajrelease == '10') or $::osfamily == 'Darwin' {
-    # Solaris 10/OSX package provider does not provide 'versionable'
-    # Package is removed above, then re-added as the new version here.
-    package { $::puppet_agent::package_name:
-      ensure => 'present',
-      *      => $_package_options,
-    }
-  } else {
-    package { $::puppet_agent::package_name:
-      ensure => $package_version,
-      *      => $_package_options,
+    } elsif ($::osfamily == 'Solaris' and $::operatingsystemmajrelease == '10') or $::osfamily == 'Darwin' {
+      # Solaris 10/OSX package provider does not provide 'versionable'
+      # Package is removed above, then re-added as the new version here.
+      package { $::puppet_agent::package_name:
+        ensure => 'present',
+        *      => $_package_options,
+      }
+    } else {
+      package { $::puppet_agent::package_name:
+        ensure => $package_version,
+        *      => $_package_options,
+      }
     }
   }
 }
