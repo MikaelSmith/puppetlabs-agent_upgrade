@@ -20,12 +20,12 @@ describe 'puppet_agent', :unless => Puppet.version < "3.8.0" || Puppet.version >
     :clientcert      => 'foo.example.vm',
   }
 
-  ['7', '6', '5'].each do |aixver|
-    context "aix #{aixver}" do
+  [['7', '8'], ['7', '7'], ['6', '6'], ['5', '5']].each do |aixver, powerver|
+    context "aix #{aixver}, PowerPC_POWER#{powerver}" do
 
       let(:facts) do
         facts.merge({
-          :architecture    => "PowerPC_POWER#{aixver}",
+          :architecture    => "PowerPC_POWER#{powerver}",
           :platform_tag    => "aix-#{aixver}.1-power"
         })
       end
@@ -82,7 +82,7 @@ describe 'puppet_agent', :unless => Puppet.version < "3.8.0" || Puppet.version >
     end
   end
 
-  ['4', '8'].each do |aixver|
+  ['4', '9'].each do |aixver|
     context "aix #{aixver}" do
       let(:facts) do
         facts.merge({
