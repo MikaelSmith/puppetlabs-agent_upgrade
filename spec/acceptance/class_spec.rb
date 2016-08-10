@@ -13,6 +13,7 @@ describe 'puppet_agent class' do
 
       # Run it twice and test for idempotency
       apply_manifest(pp, :catch_failures => true)
+      require 'byebug'; byebug
       configure_agent_on default
       apply_manifest(pp, :catch_changes  => true)
     end

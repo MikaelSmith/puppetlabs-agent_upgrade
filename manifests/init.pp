@@ -71,7 +71,7 @@ class puppet_agent (
     }
 
     $aio_upgrade_required = ($is_pe == false and $_expected_package_version != undef) or
-      ($::aio_agent_version != undef and $_expected_package_version != undef and
+      ($::facts['aio_agent_version'] != undef and $_expected_package_version != undef and
         versioncmp("${::aio_agent_version}", "${_expected_package_version}") < 0)
 
     if $::architecture == 'x86' and $arch == 'x64' {
@@ -92,7 +92,7 @@ class puppet_agent (
     }
 
     if $::operatingsystem == 'SLES' and $::operatingsystemmajrelease == '10' {
-      $_package_file_name = "${puppet_agent::package_name}-${package_version}-1.sles10.${::architecture}.rpm"
+      $_package_file_name = "${puppet_agent::package_name}-${_package_version}-1.sles10.${::architecture}.rpm"
     } elsif $::operatingsystem == 'Solaris' {
       $pkg_arch = $arch ? {
         /^sun4[uv]$/ => 'sparc',
@@ -100,15 +100,15 @@ class puppet_agent (
       }
 
       if $::operatingsystemmajrelease == '10' {
-        $_package_file_name = "${puppet_agent::package_name}-${package_version}-1.${pkg_arch}.pkg.gz"
+        $_package_file_name = "${puppet_agent::package_name}-${_package_version}-1.${pkg_arch}.pkg.gz"
       } elsif $::operatingsystemmajrelease == '11' {
         $_package_file_name = "${puppet_agent::package_name}@${_package_version},5.11-1.${pkg_arch}.p5p"
       }
     } elsif $::operatingsystem == 'Darwin' and $::macosx_productversion_major =~ /10\.[9,10,11]/ {
-      $_package_file_name = "${puppet_agent::package_name}-${package_version}-1.osx${$::macosx_productversion_major}.dmg"
+      $_package_file_name = "${puppet_agent::package_name}-${_package_version}-1.osx${$::macosx_productversion_major}.dmg"
     } elsif $::operatingsystem == 'AIX' {
       $aix_ver_number = regsubst($::platform_tag,'aix-(\d+\.\d+)-power','\1')
-      $_package_file_name = "${puppet_agent::package_name}-${package_version}-1.aix${aix_ver_number}.ppc.rpm"
+      $_package_file_name = "${puppet_agent::package_name}-${_package_version}-1.aix${aix_ver_number}.ppc.rpm"
     } elsif $::osfamily == 'windows' {
       $_arch = $::kernelmajversion ?{
         /^5\.\d+/ => 'x86', # x64 is never allowed on windows 2003
@@ -117,8 +117,8 @@ class puppet_agent (
 
       if $is_pe {
         $_package_file_name = "${package_name}-${_arch}.msi"
-      } elsif $package_version != undef {
-        $_package_file_name = "${package_name}-${package_version}-${_arch}.msi"
+      } elsif $_package_version != undef {
+        $_package_file_name = "${package_name}-${_package_version}-${_arch}.msi"
       } else {
         $_package_file_name = "${package_name}-${_arch}-latest.msi"
       }

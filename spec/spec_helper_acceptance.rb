@@ -92,7 +92,7 @@ end
 
 def server_opts
   {
-    :master => {:autosign => true, :dns_alt_names => master},
+    :master => {:autosign => true, :dns_alt_names => master, :strict_variables => true},
   }
 end
 

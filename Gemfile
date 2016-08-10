@@ -17,3 +17,5 @@ group :system_tests do
   gem 'beaker-rspec', '~> 5.1'
   gem 'beaker-hostgenerator'
 end
+
+gem 'byebug'
