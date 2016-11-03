@@ -3,9 +3,10 @@ class puppet_agent::osfamily::debian(
 ) {
   assert_private()
 
-  if $::puppet_agent::manage_repo {
+  include ::apt
+  $repo_name = 'pc_repo'
 
-    include ::apt
+  if $::puppet_agent::manage_repo {
 
     if $::puppet_agent::is_pe {
       $pe_server_version = pe_build_version()
@@ -51,7 +52,7 @@ class puppet_agent::osfamily::debian(
           $_proxy_host)
       }
 
-      apt::setting { 'conf-pc_repo':
+      apt::setting { "conf-${pc_repo}":
         content  => $_apt_settings.join(''),
         priority => 90,
       }
@@ -84,7 +85,7 @@ class puppet_agent::osfamily::debian(
       server => 'pgp.mit.edu',
     }
 
-    apt::source { 'pc_repo':
+    apt::source { $repo_name:
       location => $source,
       repos    => $::puppet_agent::collection,
       key      => {
@@ -97,9 +98,17 @@ class puppet_agent::osfamily::debian(
     # apt_update doesn't inherit the future class dependency, so it
     # can wait until the end of the run to exec. Force it to happen now.
     notify { 'pc_repo_force':
-        message => "forcing apt update for pc_repo ${::puppet_agent::collection}",
+        message => "forcing apt update for ${pc_repo} ${::puppet_agent::collection}",
         require => Exec['apt_update'],
     }
 
+  } else {
+    apt::setting { "conf-${pc_repo}":
+      ensure  => absent,
+      content => '',
+    }
+    apt::source { $pc_repo:
+      ensure => absent,
+    }
   }
 }

@@ -102,5 +102,9 @@ class puppet_agent::osfamily::redhat(
       sslclientcert => $_sslclientcert_path,
       sslclientkey  => $_sslclientkey_path,
     }
+  } else {
+    yumrepo { 'pc_repo':
+      ensure => absent,
+    }
   }
 }

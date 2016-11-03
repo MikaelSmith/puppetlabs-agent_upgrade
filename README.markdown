@@ -121,7 +121,8 @@ Install from Puppet Enterprise repos. Enabled if communicating with a PE master.
 
 Boolean to determine whether to configure zypper/yum/apt/solaris repositories. Defaults to `true`.
 If set to false, it is assumed an internally hosted repository will be used for the installation,
-and the native package providers will be used to query pre-configured repos on the host being upgraded.
+and the native package providers will be used to query pre-configured repos on the host being upgraded;
+specifically remove the repo if it was previously configured.
 
 ##### `package_name`
 
