@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Mark install process starting
+pid_path="$(dirname ${BASH_SOURCE[0]})/puppet_agent_upgrade.pid"
+
+if [[ -f $pid_path ]]; then
+  rm -f $pid_path
+fi
+echo $$ > $pid_path
+
+# Wait for Puppet to exit
+puppet_pid=$1
+while $(kill -0 ${puppet_pid:?}); do
+  sleep 5
+done
+
+function start_service() {
+  service="${1:?}"
+  /opt/puppetlabs/bin/puppet resource service "${service:?}" ensure=running enable=true
+}
+
+function remove_package() {
+  package="${1:?}"
+  /opt/puppetlabs/bin/puppet resource package "${package:?}" ensure=absent uninstall_options='--nodeps' provider=rpm
+}
+
+# Remove old package
+remove_package <%= $old_package %>
+
+# Restore puppet.conf removed by package removal
+cp <%= $confdir %>/puppet.conf.rpmsave <%= $config %>
+
+# Install package
+rpm -i --ignoreos <%= $install_options.join(' ') %> <%= $sourcefile %>
+
+# Ensure services are running
+start_service puppet
+start_service mcollective
+
+# Mark upgrade complete
+if [[ -f $pid_path ]]; then
+  rm -f $pid_path
+fi

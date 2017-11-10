@@ -19,8 +19,10 @@ class puppet_agent::install(
   assert_private()
 
   $old_packages = (versioncmp("${::clientversion}", '4.0.0') < 0)
+  $pre5_packages = (versioncmp("${::clientversion}", '5.0.0') < 0)
 
-  if ($::operatingsystem == 'SLES' and $::operatingsystemmajrelease == '10') or $::operatingsystem == 'AIX' {
+  if ($::operatingsystem == 'SLES' and $::operatingsystemmajrelease == '10') or
+    ($::operatingsystem == 'AIX' and $pre5_packages) {
     contain puppet_agent::install::remove_packages
 
     exec { 'replace puppet.conf removed by package removal':
@@ -43,6 +45,27 @@ class puppet_agent::install(
       provider        => 'rpm',
       source          => "/opt/puppetlabs/packages/${package_file_name}",
       install_options => $_install_options,
+    }
+  } elsif $::operatingsystem == 'AIX' {
+    # Puppet 5 upgrades require an async upgrade on AIX.
+    if $puppet_agent::aio_upgrade_required {
+      $_logfile = "${::env_temp_variable}/puppet_install.log"
+      notice ("Puppet install log file at ${_logfile}")
+
+      $_installsh = "${::env_temp_variable}/puppet_install.sh"
+      file { "${_installsh}":
+        ensure  => file,
+        mode    => '0755',
+        content => epp('puppet_agent/aix_install.sh.epp', {
+          'old_package'     => 'puppet-agent',
+          'confdir'         => $puppet_agent::params::confdir,
+          'config'          => $puppet_agent::params::config,
+          'install_options' => $install_options,
+          'sourcefile'      => "/opt/puppetlabs/packages/${package_file_name}"})
+      }
+      -> exec { 'puppet_install script':
+        command => "${_installsh} ${::puppet_agent_pid} 2>&1 > ${_logfile} &",
+      }
     }
   } elsif $::operatingsystem == 'Solaris' and $::operatingsystemmajrelease == '10' {
     $_unzipped_package_name = regsubst($package_file_name, '\.gz$', '')

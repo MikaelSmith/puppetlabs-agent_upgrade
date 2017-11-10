@@ -6,7 +6,7 @@
 class puppet_agent::service {
   assert_private()
 
-  if $::operatingsystem == 'Solaris' and $::operatingsystemmajrelease == '10' {
+  if ($::operatingsystem == 'Solaris' and $::operatingsystemmajrelease == '10') or $::operatingsystem == 'AIX' {
     # Skip managing service, upgrade script will handle it.
   } elsif $::operatingsystem == 'Solaris' and $::operatingsystemmajrelease == '11' and
       ((versioncmp("${::clientversion}", '4.0.0') < 0) or $puppet_agent::aio_upgrade_required) {
